@@ -1,36 +1,101 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚀 AI Tweet Generator
 
-## Getting Started
+An AI-powered Tweet Generator built with ⚡ Next.js, 🧠 Azure AI Foundry, and 💅 shadcn/ui. Enter a sentence, choose a character (like a pirate 🏴‍☠️ or Shakespeare 🎭), and watch the AI transform your words into a unique tweet — all under 280 characters!
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 📸 Screenshots
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| Input Form | Generated Tweet |
+|------------|-----------------|
+| ![Input UI](https://raw.githubusercontent.com/vedantjain8/AI-tweet-generator/main/public/screenshot1.png) | ![Output UI](https://raw.githubusercontent.com/vedantjain8/AI-tweet-generator/main/public/screenshot2.png) |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## ✨ Features
 
-## Learn More
+- 🔮 Rewrites your sentence in any character's tone (pirate, Shakespeare, cyberpunk, etc.)
+- ⚙️ Powered by Azure AI Foundry (DeepSeek-V3)
+- 🎨 Beautiful UI with animations (Framer Motion + shadcn/ui)
+- 🧠 Prompt engineering without model fine-tuning
+- 🧾 Copy-to-clipboard, rate limiting, and logging
+- 🌐 Fully deployable on Azure Web Apps
+- 📦 Docker-ready for local and cloud hosting
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🧪 How to Run
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 🐳 Run with Docker
 
-## Deploy on Vercel
+1. **Clone the repo**:
+   ```bash
+   git clone https://github.com/vedantjain8/AI-tweet-generator.git
+   cd AI-tweet-generator
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+2. **Set environment variables** in `.env`:
+   ```env
+   AZURE_AI_ENDPOINT=your-key-here
+   AZURE_AI_API_KEY=https://your-azure-endpoint
+   AZURE_MODEL_NAME=deepseek-v3
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+3. **Build and run the container**:
+   ```bash
+   docker build -t ai-tweet-generator .
+   docker run -p 3000:3000 --env-file .env ai-tweet-generator
+   ```
+
+4. Open your browser at [http://localhost:3000](http://localhost:3000)
+
+---
+
+### 💻 Run Locally (without Docker)
+
+1. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+2. **Create `.env` file** and fill in your Azure values:
+   ```env
+   AZURE_OPENAI_KEY=your-key-here
+   AZURE_OPENAI_ENDPOINT=https://your-openai-endpoint
+   AZURE_OPENAI_MODEL_NAME=deepseek-v3
+   ```
+
+3. **Run the app**:
+   ```bash
+   npm run dev
+   ```
+
+---
+
+## 👥 Contributors
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="https://github.com/vedantjain8.png" width="80" />
+      <br />
+      <b>@vedantjain8</b>
+    </td>
+  </tr>
+</table>
+
+---
+
+## 🛠️ Tech Stack
+
+- **Framework**: [Next.js](https://nextjs.org)
+- **UI**: [shadcn/ui](https://ui.shadcn.com)
+- **Icons**: [lucide-react](https://lucide.dev)
+- **Animation**: [Framer Motion](https://www.framer.com/motion/)
+- **AI**: [Azure AI Foundry](https://learn.microsoft.com/en-us/azure/ai-services/)
+- **Styling**: Tailwind CSS
+- **Deployment**: Azure App Service / Docker
+
+---
+
+## ⭐️ Star this repo if you like it!

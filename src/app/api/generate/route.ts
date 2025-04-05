@@ -1,57 +1,91 @@
-// src/app/api/generate/route.ts
+// File: src/app/api/generate/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 
-const endpoint = process.env.AZURE_AI_ENDPOINT!;
-const apiKey = process.env.AZURE_AI_API_KEY!;
+// === Rate limiting setup ===
+const RATE_LIMIT = 5; // max 5 requests
+const WINDOW_MS = 60 * 1000; // per 1 minute
+const ipRequestMap = new Map<string, number[]>();
 
 export async function POST(req: NextRequest) {
   try {
-    const { sentence, character } = await req.json();
+    const ip = req.headers.get("x-forwarded-for") || "unknown";
+    const now = Date.now();
 
+    // Initialize array if IP not present
+    if (!ipRequestMap.has(ip)) ipRequestMap.set(ip, []);
+
+    const timestamps = ipRequestMap.get(ip)!;
+    // Filter timestamps within window
+    const recentRequests = timestamps.filter((ts) => now - ts < WINDOW_MS);
+    ipRequestMap.set(ip, [...recentRequests, now]);
+
+    if (recentRequests.length >= RATE_LIMIT) {
+      return NextResponse.json(
+        { error: "Rate limit exceeded. Please try again later." },
+        { status: 429 }
+      );
+    }
+
+    const { sentence, character } = await req.json();
     if (!sentence || !character) {
       return NextResponse.json(
-        { error: "Missing sentence or character" },
+        { error: "Missing sentence or character in request body" },
         { status: 400 }
       );
     }
 
-    const systemPrompt = `You are a master impersonator. Re-write any sentence in the speaking style and tone of the given character, keeping it tweet-friendly (max 280 characters). Read the sentence carefully and make sure to use the character's unique style. Read the sentence and identify the emotion and rewrite with the same emotion and use appropriate emojies`;
+    const systemPrompt = `You are a character transformer. Rewrite the given sentence in the style of a character. Character: ${character}. Keep it fun and limited to 280 characters.`;
 
-    const userPrompt = `Sentence: "${sentence}"\nCharacter: ${character}`;
+    const azureApiKey = process.env.AZURE_AI_API_KEY;
+    const azureEndpoint = process.env.AZURE_AI_ENDPOINT;
+    const azureModel = process.env.AZURE_MODEL_NAME;
 
-    const aiRes = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "api-key": process.env.AZURE_AI_API_KEY!,
-        "x-ms-model-mesh-model-name": "deepseek-v3",
-      },
-      body: JSON.stringify({
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        max_tokens: 200,
-        temperature: 0.8,
-        top_p: 0.95,
-      }),
-    });
-
-    const data = await aiRes.json();
-    const result = data.choices?.[0]?.message?.content?.trim();
-
-    if (!result) {
+    if (!azureApiKey || !azureEndpoint || !azureModel) {
       return NextResponse.json(
-        { error: "No result from model" },
+        { error: "Azure configuration missing in environment variables." },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ result });
-  } catch (error) {
-    console.error("API error:", error);
+    const azureRes = await fetch(azureEndpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "api-key": azureApiKey,
+        "x-ms-model-mesh-model-name": azureModel,
+      },
+      body: JSON.stringify({
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: sentence },
+        ],
+        max_tokens: 200,
+        temperature: 0.8,
+      }),
+    });
+
+    if (!azureRes.ok) {
+      const err = await azureRes.text();
+      console.error("Azure Error:", err);
+      return NextResponse.json(
+        { error: "Failed to fetch response from Azure AI." },
+        { status: 500 }
+      );
+    }
+
+    const data = await azureRes.json();
+    const tweet = data?.choices?.[0]?.message?.content?.trim();
+
+    console.log(
+      `[${new Date().toISOString()}] | IP: ${ip} | Char: ${character} | Input: ${sentence} | Output: ${tweet}`
+    );
+
+    return NextResponse.json({ tweet });
+  } catch (error: string | unknown) {
+    console.error("Server Error:", error);
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: "Internal server error." },
       { status: 500 }
     );
   }
